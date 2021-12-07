@@ -1,2 +1,6 @@
-# laravel-sqli-stomper
-A Laravel plugin which prevents SQL injection attacks and forces usage of PDO parameters
+# laravel-sqli-reject
+A Laravel security plugin that blocks SQL injection attemps.
+
+## Install
+
+## Configuration
