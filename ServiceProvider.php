@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Providers;
+namespace Mmeyer2k\LaravelSqliReject;
 
 use Exception;
 use Illuminate\Support\Facades\Event;
