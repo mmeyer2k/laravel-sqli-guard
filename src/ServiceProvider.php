@@ -5,9 +5,9 @@ namespace Mmeyer2k\LaravelSqliReject;
 use Exception;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Database\Events\StatementPrepared;
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\ServiceProvider as SP;
 
-class SqliMonitor extends ServiceProvider
+class ServiceProvider extends SP
 {
     private const configString = 'sqlireject.allow_unsafe_mysql';
 

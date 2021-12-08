@@ -1,0 +1,20 @@
+{
+    "name": "mmeyer2k/laravel-sqli-reject",
+    "description": "SQL injection prevention plugin for laravel",
+    "keywords": [],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Mmeyer2k\\LaravelSqliReject\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "mike",
+            "email": "m.meyer2k@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.1.0"
+    }
+}
