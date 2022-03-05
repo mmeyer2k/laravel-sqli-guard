@@ -1,5 +1,5 @@
 # laravel-sqli-reject
-A Laravel security plugin that rejects SQL injection attempts before they can be executed.
+A laravel plugin that forces usage of PDO parameterization and strongly protects against SQL injection attacks.
 
 ## Install
 

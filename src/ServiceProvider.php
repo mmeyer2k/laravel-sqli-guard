@@ -1,15 +1,14 @@
 <?php
 
-namespace Mmeyer2k\LaravelSqliReject;
+namespace Mmeyer2k\LaravelSqliGuard;
 
-use Exception;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Database\Events\StatementPrepared;
 use Illuminate\Support\ServiceProvider as SP;
 
 class ServiceProvider extends SP
 {
-    private const configString = 'sqlireject.allow_unsafe_mysql';
+    private const configString = 'sqliguard.allow_unsafe_mysql';
 
     private const needles = [
         'information_schema',
@@ -28,18 +27,9 @@ class ServiceProvider extends SP
      * Bootstrap services.
      *
      * @return void
+     * @throws \Mmeyer2k\LaravelSqliGuard\DangerousQueryException
      */
     public function boot()
-    {
-        //
-    }
-
-    /**
-     * Register services.
-     *
-     * @return void
-     */
-    public function register()
     {
         Event::listen(StatementPrepared::class, function (StatementPrepared $event) {
             // Get the switch variable
@@ -61,8 +51,8 @@ class ServiceProvider extends SP
 
             // If query is suspicious, throw exception back to PDO which will become Illuminate\Database\QueryException
             foreach (self::needles as $needle) {
-                if (str_contains($query, $needle)) {
-                    throw new Exception('Query contains an invalid character sequence');
+                if (strpos($query, $needle) !== null) {
+                    throw new DangerousQueryException('Query contains an invalid character sequence');
                 }
             }
         });

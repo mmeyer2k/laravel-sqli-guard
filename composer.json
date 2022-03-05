@@ -1,20 +1,30 @@
 {
-    "name": "mmeyer2k/laravel-sqli-reject",
+    "name": "mmeyer2k/laravel-sqli-guard",
     "description": "SQL injection prevention plugin for laravel",
     "keywords": [],
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Mmeyer2k\\LaravelSqliReject\\": "src/"
+            "Mmeyer2k\\LaravelSqliGuard\\": "src/"
         }
     },
     "authors": [
         {
-            "name": "mike",
+            "name": "Michael Meyer",
             "email": "m.meyer2k@gmail.com"
         }
     ],
     "require": {
         "php": ">=7.1.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Mmeyer2k\\LaravelSqliGuard\\ServiceProvider"
+            ],
+            "aliases": {
+                "Debugbar": "Barryvdh\\Debugbar\\Facade"
+            }
+        }
     }
 }
