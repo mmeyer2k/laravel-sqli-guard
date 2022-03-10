@@ -9,8 +9,6 @@ use Illuminate\Support\ServiceProvider as SP;
 
 class ServiceProvider extends SP
 {
-    private const configString = 'sqliguard.allow_unsafe_mysql';
-
     private const needles = [
         'information_schema',
         'benchmark(',
@@ -34,7 +32,7 @@ class ServiceProvider extends SP
     {
         Event::listen(StatementPrepared::class, function (StatementPrepared $event) {
             // Get the switch variable
-            $allowUnsafe = config(self::configString);
+            $allowUnsafe = SqliProtection::isUnsafeAllowed();
 
             // If being run from commandline, we are always safe, therefore no need to check
             // but still allow for the possibility to test by setting the allowUnsafe flag
@@ -57,16 +55,6 @@ class ServiceProvider extends SP
                 }
             }
         });
-    }
-
-    public static function allowUnsafe(): void
-    {
-        config([self::configString => true]);
-    }
-
-    public static function blockUnsafe(): void
-    {
-        config([self::configString => false]);
     }
 
     private static function normalize(string $sql): string
