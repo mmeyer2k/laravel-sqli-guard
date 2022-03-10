@@ -1,7 +1,8 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Mmeyer2k\LaravelSqliGuard;
 
+use Exception;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Database\Events\StatementPrepared;
 use Illuminate\Support\ServiceProvider as SP;
@@ -51,8 +52,8 @@ class ServiceProvider extends SP
 
             // If query is suspicious, throw exception back to PDO which will become Illuminate\Database\QueryException
             foreach (self::needles as $needle) {
-                if (strpos($query, $needle) !== null) {
-                    throw new DangerousQueryException('Query contains an invalid character sequence');
+                if (str_contains($query, $needle)) {
+                    throw new Exception('Query contains an invalid character sequence');
                 }
             }
         });
