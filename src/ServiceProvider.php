@@ -10,7 +10,6 @@ use Illuminate\Support\ServiceProvider as SP;
 class ServiceProvider extends SP
 {
     private const needles = [
-        'information_schema',
         'benchmark(',
         'version(',
         'sleep(',
