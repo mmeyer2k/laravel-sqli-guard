@@ -16,5 +16,4 @@ jobs:
           key: composer-v1
           paths:
             - vendor
-      - run: sleep 100000
       - run: ./vendor/bin/phpunit tests/TestCase.php
