@@ -25,7 +25,7 @@ class ServiceProvider extends SP
      * Bootstrap services.
      *
      * @return void
-     * @throws \Mmeyer2k\LaravelSqliGuard\DangerousQueryException
+     * @throws \Exception
      */
     public function boot()
     {
