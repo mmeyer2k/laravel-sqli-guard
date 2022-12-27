@@ -11,7 +11,7 @@ class ServiceProvider extends SP
 {
     private const needles = [
         'benchmark(',
-        'version(',
+        'version()',
         'sleep(',
         '--',
         '0x',
@@ -31,7 +31,7 @@ class ServiceProvider extends SP
     {
         Event::listen(StatementPrepared::class, function (StatementPrepared $event) {
             // Get the switch variable
-            $allowUnsafe = SqliProtection::isUnsafeAllowed();
+            $allowUnsafe = SqliGuard::isUnsafeAllowed();
 
             // If being run from commandline, we are always safe, therefore no need to check
             // but still allow for the possibility to test by setting the allowUnsafe flag
@@ -49,7 +49,7 @@ class ServiceProvider extends SP
 
             // If query is suspicious, throw exception back to PDO which will become Illuminate\Database\QueryException
             foreach (self::needles as $needle) {
-                if (str_contains($query, $needle)) {
+                if (strpos($query, $needle) !== false) {
                     throw new Exception('Query contains an invalid character sequence');
                 }
             }

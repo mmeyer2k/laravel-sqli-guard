@@ -1,7 +1,7 @@
 <?php
 
 use Mmeyer2k\LaravelSqliGuard\ServiceProvider;
-use Mmeyer2k\LaravelSqliGuard\SqliProtection;
+use Mmeyer2k\LaravelSqliGuard\SqliGuard;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
@@ -14,7 +14,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
     {
         parent::setUp();
 
-        SqliProtection::blockUnsafe();
+        SqliGuard::blockUnsafe();
     }
 
     protected function getPackageProviders($app): array

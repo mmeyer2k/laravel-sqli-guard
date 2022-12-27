@@ -2,7 +2,7 @@
 
 namespace Mmeyer2k\LaravelSqliGuard;
 
-class SqliProtection
+class SqliGuard
 {
     private const configString = 'sqliguard.allow_unsafe_mysql';
 
