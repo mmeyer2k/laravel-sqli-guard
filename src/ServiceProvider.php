@@ -11,14 +11,14 @@ class ServiceProvider extends SP
 {
     private const needles = [
         'benchmark(',
-        'version()',
+        'version(',
         'sleep(',
         '--',
         '0x',
         '#',
         "'",
         '"',
-        '/',
+        '/\(.*select.*information_schema.*information_schema.*\)/',
     ];
 
     /**
@@ -47,10 +47,20 @@ class ServiceProvider extends SP
             // Normalize query string to prevent tomfoolery
             $query = self::normalize($event->statement->queryString ?? '');
 
+            $error = new Exception('Query contains dangerous character sequence');
+
             // If query is suspicious, throw exception back to PDO which will become Illuminate\Database\QueryException
             foreach (self::needles as $needle) {
-                if (strpos($query, $needle) !== false) {
-                    throw new Exception('Query contains an invalid character sequence');
+                if (substr($query, 0, 1) === '/') {
+                    // Handle regex patterns
+                    if (preg_match($needle, $query)) {
+                        throw $error;
+                    }
+                } else {
+                    // Handle plain strings
+                    if (strpos($query, $needle) !== false) {
+                        throw $error;
+                    }
                 }
             }
         });
