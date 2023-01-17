@@ -37,15 +37,15 @@ To re-enable protection after executing a dangerous query use `blockUnsafe`.
 ```
 
 ## Forbidden Character Sequences
-| Character | Reason |
-|---|---|
-| `'` | The single quotation has been the nemises of sql since time immemoral. |
-| `"` | Some dirty tricks are also possible with double quotes. |
-| `0x` | Hexidecimal conversion is often a used as a way of bypassing naive WAFs that are looking for single quoted sequences. |
-| `--` and `#` | Comments can often be used to manipulate queries in clever ways. If binary values need to be supplied, use raw PDO string parameter. |
-| `sleep(` | Used in blind timing attacks to leak information and can also be used as a connection exhaustion DDoS vector. |
-| `version(`| Prevents probing SQL for its version information, which can be used to refine attacks. |
-| `benchmark(` | Used in SQLi timing attacks and as a DDoS vector due to its intense CPU usage. |
+| Character                                                  | Reason                                                                                                                                                             |
+|------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `'`                                                        | The single quotation has been the nemises of SQL since the beginning of time.                                                                                      |
+| `"`                                                        | Some dirty tricks are also possible with double quotes.                                                                                                            |
+| `0x`                                                       | Hexadecimal conversion is often a used as a way of bypassing naive WAFs that are looking for single quoted sequences.                                              |
+| `--`, `#`, `/*` and `*/`                                   | Comments can often be used to manipulate queries in clever ways. If binary values need to be supplied, use raw PDO string parameter.                               |
+| `sleep(`                                                   | Used in blind timing attacks to leak information and can also be used as a connection exhaustion DDoS vector.                                                      |
+| `version(`                                                 | Prevents probing SQL for its version information, which can be used to refine attacks.                                                                             |
+| `benchmark(`                                               | Used in SQLi timing attacks and as a DDoS vector due to its intense CPU usage.                                                                                     |
 | `/\(.*select.*information_schema.*information_schema.*\)/` | Prevents CPU overload DDoS attacks by blocking subqueries that compound data from `information_schema`. This rule is unlikely to ever be used in a legitimate way. |
 
 ## Caveats
@@ -69,4 +69,4 @@ Depending on the context, this could be a major security issue.
 Another concern is that some DDoS attacks are possible if the attacker knows, or can guess, information about the data schema.
 Again using the above function as an example, but now the query string `id= (SELECT COUNT(*) FROM users A, users B, users C, ...)` is sent.
 CPU exhaustion can occur if there are many rows in the specified table(s), or if the number of junctions is high.
-A similar attack is possible against `information_schema`, but it requires no knowledge.
+A similar attack is possible against `information_schema`, but it requires **no knowledge**.

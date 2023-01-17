@@ -16,6 +16,8 @@ class ServiceProvider extends SP
         '--',
         '0x',
         '#',
+        '/*',
+        '*/',
         "'",
         '"',
         '/\(.*select.*information_schema.*information_schema.*\)/',
@@ -25,7 +27,7 @@ class ServiceProvider extends SP
      * Bootstrap services.
      *
      * @return void
-     * @throws \Exception
+     * @throws Exception
      */
     public function boot()
     {
@@ -47,11 +49,12 @@ class ServiceProvider extends SP
             // Normalize query string to prevent tomfoolery
             $query = self::normalize($event->statement->queryString ?? '');
 
+            // Define the exception to be thrown in the event of a failed query check.
+            // If query is suspicious, this exception will be caught by laravel and re-thrown as Illuminate\Database\QueryException
             $error = new Exception('Query contains dangerous character sequence');
 
-            // If query is suspicious, throw exception back to PDO which will become Illuminate\Database\QueryException
             foreach (self::needles as $needle) {
-                if (substr($query, 0, 1) === '/') {
+                if (substr($query, 0, 1) === '/' && substr($query, -1) === '/') {
                     // Handle regex patterns
                     if (preg_match($needle, $query)) {
                         throw $error;
@@ -72,8 +75,6 @@ class ServiceProvider extends SP
 
         $sql = preg_replace('/\s+/', ' ', $sql);
 
-        $sql = str_replace(' (', '(', $sql);
-
-        return $sql;
+        return str_replace(' (', '(', $sql);
     }
 }
