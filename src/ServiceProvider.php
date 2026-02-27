@@ -2,79 +2,167 @@
 
 namespace Mmeyer2k\LaravelSqliGuard;
 
-use Exception;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Events\StatementPrepared;
 use Illuminate\Support\ServiceProvider as SP;
+use Mmeyer2k\LaravelSqliGuard\Events\QueryBlocked;
 
 class ServiceProvider extends SP
 {
-    private const needles = [
-        'benchmark(',
-        'version(',
-        'sleep(',
-        '--',
+    /**
+     * Default patterns that should never appear in parameterized query strings.
+     */
+    private const NEEDLES = [
+        // Quotes — the most fundamental SQLi vector
+        "'",
+        '"',
+
+        // Hex literals — bypass WAF detection
         '0x',
+
+        // Comments — manipulate query logic
+        '--',
         '#',
         '/*',
         '*/',
-        "'",
-        '"',
+
+        // System variable access — enumeration
+        '@@',
+
+        // Dangerous functions — timing attacks, blind injection, DDoS
+        'sleep(',
+        'benchmark(',
+        'version(',
+
+        // File system access
+        'load_file(',
+        'into outfile',
+        'into dumpfile',
+
+        // XML error-based blind injection (MySQL)
+        'extractvalue(',
+        'updatexml(',
+
+        // Compound information_schema DDoS
         '/\(.*select.*information_schema.*information_schema.*\)/',
     ];
 
     /**
-     * Bootstrap services.
-     *
-     * @return void
-     * @throws Exception
+     * Additional patterns enabled only in strict mode.
      */
-    public function boot()
+    private const STRICT_NEEDLES = [
+        // Char-code string construction to bypass quote filtering
+        'char(',
+
+        // Stacked queries
+        ';',
+    ];
+
+    public function boot(): void
     {
+        $this->publishes([
+            __DIR__ . '/../config/sqliguard.php' => config_path('sqliguard.php'),
+        ], 'sqliguard-config');
+
+        $this->mergeConfigFrom(__DIR__ . '/../config/sqliguard.php', 'sqliguard');
+
+        // Reset state between Octane requests
+        if (class_exists(\Laravel\Octane\Events\RequestReceived::class)) {
+            Event::listen(\Laravel\Octane\Events\RequestReceived::class, function () {
+                SqliGuard::reset();
+            });
+        }
+
         Event::listen(StatementPrepared::class, function (StatementPrepared $event) {
-            // Get the switch variable
+            // Master switch from config
+            if (!config('sqliguard.enabled', true)) {
+                return;
+            }
+
+            // Get the runtime toggle
             $allowUnsafe = SqliGuard::isUnsafeAllowed();
 
-            // If being run from commandline, we are always safe, therefore no need to check
-            // but still allow for the possibility to test by setting the allowUnsafe flag
+            // If running from console with default state, skip checks
             if (app()->runningInConsole() && $allowUnsafe === null) {
                 return;
             }
 
-            // If allowUnsafe has been called then return before checking
+            // If explicitly allowed, skip checks
             if ($allowUnsafe === true) {
                 return;
             }
 
-            // Normalize query string to prevent tomfoolery
             $query = self::normalize($event->statement->queryString ?? '');
 
-            // Define the exception to be thrown in the event of a failed query check.
-            // If query is suspicious, this exception will be caught by laravel and re-thrown as Illuminate\Database\QueryException
-            $error = new Exception('Query contains dangerous character sequence');
+            $needles = self::buildNeedleList();
 
-            foreach (self::needles as $needle) {
-                if (substr($query, 0, 1) === '/' && substr($query, -1) === '/') {
-                    // Handle regex patterns
-                    if (preg_match($needle, $query)) {
-                        throw $error;
-                    }
+            foreach ($needles as $needle) {
+                $isRegex = str_starts_with($needle, '/') && str_ends_with($needle, '/');
+
+                if ($isRegex) {
+                    $matched = (bool) preg_match($needle, $query);
                 } else {
-                    // Handle plain strings
-                    if (strpos($query, $needle) !== false) {
-                        throw $error;
+                    $matched = str_contains($query, $needle);
+                }
+
+                if ($matched) {
+                    if (config('sqliguard.log_blocked', true)) {
+                        Log::warning('SQLi Guard blocked query', [
+                            'needle' => $needle,
+                            'query' => $event->statement->queryString,
+                        ]);
                     }
+
+                    QueryBlocked::dispatch($needle, $event->statement->queryString ?? '');
+
+                    throw new SqlInjectionException($needle, $event->statement->queryString ?? '');
                 }
             }
         });
     }
 
+    /**
+     * Build the full list of needles from defaults + config.
+     *
+     * @return string[]
+     */
+    private static function buildNeedleList(): array
+    {
+        $needles = self::NEEDLES;
+
+        if (config('sqliguard.strict_mode', false)) {
+            $needles = array_merge($needles, self::STRICT_NEEDLES);
+        }
+
+        $extra = config('sqliguard.extra_needles', []);
+        if (!empty($extra)) {
+            $needles = array_merge($needles, $extra);
+        }
+
+        $disabled = config('sqliguard.disabled_needles', []);
+        if (!empty($disabled)) {
+            $needles = array_diff($needles, $disabled);
+        }
+
+        return array_values($needles);
+    }
+
+    /**
+     * Normalize a query string to prevent evasion techniques.
+     */
     private static function normalize(string $sql): string
     {
+        // Strip null bytes — classic WAF bypass
+        $sql = str_replace("\0", '', $sql);
+
+        // Case-insensitive matching
         $sql = strtolower($sql);
 
+        // Normalize whitespace
         $sql = preg_replace('/\s+/', ' ', $sql);
 
+        // Remove space before parentheses
         return str_replace(' (', '(', $sql);
     }
 }

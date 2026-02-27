@@ -1,11 +1,22 @@
 {
     "name": "mmeyer2k/laravel-sqli-guard",
     "description": "SQL injection prevention plugin for laravel",
-    "keywords": [],
+    "keywords": [
+        "laravel",
+        "sql-injection",
+        "security",
+        "sqli",
+        "waf"
+    ],
     "license": "MIT",
     "autoload": {
         "psr-4": {
             "Mmeyer2k\\LaravelSqliGuard\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Mmeyer2k\\LaravelSqliGuard\\Tests\\": "tests/"
         }
     },
     "authors": [
@@ -15,7 +26,12 @@
         }
     ],
     "require": {
-        "laravel/framework": "^8.0"
+        "php": "^8.1",
+        "laravel/framework": "^9.0|^10.0|^11.0|^12.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
+        "phpunit/phpunit": "^9.0|^10.0|^11.0"
     },
     "extra": {
         "laravel": {
